@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 		fgets(buf, BUF_SIZE, fp);
 		sendto(send_sock, buf, strlen(buf), 
 			0, (struct sockaddr*)&mul_adr, sizeof(mul_adr));
-		sleep(2);
+		sleep(4);
 	}
 	fclose(fp);
 	close(send_sock);

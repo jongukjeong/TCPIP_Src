@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
 		puts("pthread_create() error");
 		return -1;
 	}; 	
-
+    //sleep(10); pthread_join() 호출 이전에 sleep()은 쓰레드종료와 무관
 	if(pthread_join(t_id, &thr_ret)!=0) // 쓰레드 종료 대기
 	{
 		puts("pthread_join() error");

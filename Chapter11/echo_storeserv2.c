@@ -15,13 +15,15 @@ int main(int argc, char *argv[])
 {
     int serv_sock, clnt_sock;
     struct sockaddr_in serv_adr, clnt_adr;
-    int fds[2];
+    int fds1[2];
+    int fds2[2];
     
     pid_t pid;
     struct sigaction act;
     socklen_t adr_sz;
     int str_len, state;
     char buf[BUF_SIZE];
+    char buf2[BUF_SIZE];
     if(argc!=2) {
         printf("Usage : %s <port>\n", argv[0]);
         exit(1);
@@ -43,18 +45,20 @@ int main(int argc, char *argv[])
     if(listen(serv_sock, 5)==-1)
         error_handling("listen() error");
     
-    pipe(fds);
+    pipe(fds1);
+    pipe(fds2);
     pid=fork();
     if(pid==0)
     {
-        FILE * fp=fopen("echomsg.txt", "wt"); //파일 생성 텍스트모드
+        FILE * fp=fopen("echomsg.txt", "wt");
         char msgbuf[BUF_SIZE];
         int i, len;
 
         for(i=0; i<10; i++)
         {
-            len=read(fds[0], msgbuf, BUF_SIZE); // 부모프로세스로부터 전달받은 메세지 읽기
-            fwrite((void*)msgbuf, 1, len, fp); // 파일로 기록
+            len=read(fds1[0], msgbuf, BUF_SIZE);
+            fwrite((void*)msgbuf, 1, len, fp);
+            write(fds2[1], msgbuf, BUF_SIZE);
         }
         fclose(fp);
         return 0;
@@ -72,21 +76,23 @@ int main(int argc, char *argv[])
         pid=fork();
         if(pid==0)
         {
-            close(serv_sock); // 자식 : 불필요 소캣제거
+            close(serv_sock);
             while((str_len=read(clnt_sock, buf, BUF_SIZE))!=0)
             {
-                write(clnt_sock, buf, str_len); //클라이언트소캣으로 응답
-                write(fds[1], buf, str_len); // 파일로 기록하기위해 자식프로세스에게 메세지 전달(출력)
+                //write(clnt_sock, buf, str_len);
+                write(fds1[1], buf, str_len);
+                str_len=read(fds2[0], buf2, strlen(buf2));
+                write(clnt_sock, buf2, strlen(buf2));
             }
             
-            close(clnt_sock); // 클라이언트 접속 종료(소캣제거)
+            close(clnt_sock);
             puts("client disconnected...");
             return 0;
         }
         else
-            close(clnt_sock); // 부모 : 불필요 소캣제거
+            close(clnt_sock);
     }
-    close(serv_sock); // 서버 프로그램 종료직전 소캣제거
+    close(serv_sock);
     return 0;
 }
 

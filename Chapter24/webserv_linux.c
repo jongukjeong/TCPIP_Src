@@ -74,6 +74,7 @@ void* request_handler(void *arg)
 	
 	strcpy(method, strtok(req_line, " /"));
 	strcpy(file_name, strtok(NULL, " /"));
+    printf("request msg->%s<-\n", file_name);
 	strcpy(ct, content_type(file_name));
 	if(strcmp(method, "GET")!=0)
 	{
@@ -82,9 +83,12 @@ void* request_handler(void *arg)
 		fclose(clnt_write);
 		return;
 	 }
+    printf("request method->%s<-\n", method);
 
 	fclose(clnt_read);
-	send_data(clnt_write, ct, file_name); 
+    //printf("http server before send_data()\n");
+	send_data(clnt_write, ct, file_name);
+    //printf("http server after send_data()\n");
 }
 
 void send_data(FILE* fp, char* ct, char* file_name)
@@ -100,7 +104,8 @@ void send_data(FILE* fp, char* ct, char* file_name)
 	send_file=fopen(file_name, "r");
 	if(send_file==NULL)
 	{
-		send_error(fp);
+		printf("http server before send_error()\n");
+        send_error(fp);
 		return;
 	}
 
@@ -109,6 +114,8 @@ void send_data(FILE* fp, char* ct, char* file_name)
 	fputs(server, fp);
 	fputs(cnt_len, fp);
 	fputs(cnt_type, fp);
+    
+    printf("http server : 헤더 정보 전송 완료\n");
 
 	/* 요청 데이터 전송 */
 	while(fgets(buf, BUF_SIZE, send_file)!=NULL) 

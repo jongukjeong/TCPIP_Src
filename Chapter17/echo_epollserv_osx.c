@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     
     kq=kqueue(); // kqueue 인스턴스 생성
     if(kq == -1) {
-        break;
+        //break;
     }
 	//k_events=malloc(sizeof(struct kevent)*EPOLL_SIZE); // 구조체 초기화
 
@@ -54,18 +54,17 @@ int main(int argc, char *argv[])
     kevent(kq,kq_events,iEventCnt,NULL,0,NULL);
     iEventCnt = 0;
     
-    iEventCnt = kevent(kq,NULL,0,kq_eventlist,MAX_LENGTH_CHANGE,&tTimeout)
+    iEventCnt = kevent(kq,NULL,0,kq_eventlist,MAX_LENGTH_CHANGE,&tTimeout);
 
 	while(1)
 	{
-		if(event_cnt > 0)
+		if(iEventCnt > 0)
 		{
-            for(int i=0;i<iEvent;i++){
+            for(int i=0;i<iEventCnt;i++){
                 if(ep_events[i].data.fd==serv_sock)
                 {
                     adr_sz=sizeof(clnt_adr);
-                    clnt_sock=
-                    accept(serv_sock, (struct sockaddr*)&clnt_adr, &adr_sz);
+                    clnt_sock=accept(serv_sock, (struct sockaddr*)&clnt_adr, &adr_sz);
                     event.events=EPOLLIN;
                     event.data.fd=clnt_sock;
                     epoll_ctl(epfd, EPOLL_CTL_ADD, clnt_sock, &event);
@@ -76,8 +75,7 @@ int main(int argc, char *argv[])
                     str_len=read(ep_events[i].data.fd, buf, BUF_SIZE);
                     if(str_len==0)    // close request!
                     {
-                        epoll_ctl(
-                                  epfd, EPOLL_CTL_DEL, ep_events[i].data.fd, NULL);
+                        epoll_ctl(epfd, EPOLL_CTL_DEL, ep_events[i].data.fd, NULL);
                         close(ep_events[i].data.fd);
                         printf("closed client: %d \n", ep_events[i].data.fd);
                     }
